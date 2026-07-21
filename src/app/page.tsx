@@ -35,7 +35,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
-  const countdown = useCountdown("2026-08-04T08:00:00+08:00");
+  const countdown = useCountdown("2026-08-14T08:00:00+08:00");
   useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
