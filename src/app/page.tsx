@@ -101,7 +101,7 @@ function Hero() {
             <span className="text-white/70 text-4xl sm:text-5xl font-bold">Finally make it easy.</span>
           </h1>
           <p className="text-white/55 text-lg leading-relaxed mb-8 max-w-md">
-            Digital apps, reviewers, and templates built for Filipino students — from ₱39. No card needed, no subscriptions. Just tools that actually work.
+            Digital apps, reviewers, and templates built for Filipino students — from ₱99. No card needed, no subscriptions. Just tools that actually work.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/shop" className="font-bold text-base px-7 py-3.5 rounded-full flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg" style={{backgroundColor:"#f5c518",color:"#0f0f0f",boxShadow:"0 0 30px #f5c51844"}}>
