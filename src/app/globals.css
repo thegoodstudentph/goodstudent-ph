@@ -41,3 +41,79 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* ─── Shared utility classes ─────────────────────────────────────────── */
+
+.font-display {
+  font-family: system-ui, sans-serif;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--sage);
+}
+
+.card-dark {
+  background-color: var(--gray-dark);
+  border: 1px solid var(--gray-border);
+  border-radius: 1rem;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  background-color: var(--yellow);
+  color: var(--black);
+  font-weight: 700;
+  border-radius: 9999px;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--white);
+  font-weight: 600;
+  border-radius: 9999px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Simple "Coming Soon" pill used on product cards */
+.coming-soon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  background-color: rgba(122, 158, 135, 0.12);
+  border: 1px solid rgba(122, 158, 135, 0.35);
+  color: var(--sage);
+}

@@ -2,93 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import {
-  Smartphone,
-  BookOpen,
-  FileText,
-  Zap,
-  Timer,
-  Calculator,
-  ChevronRight,
-  ShoppingCart,
-} from "lucide-react";
-
-// ─── DATA ─────────────────────────────────────────────────────────────────────
-
-const ALL_PRODUCTS = [
-  {
-    id: 1,
-    name: "Student Planner App",
-    price: 99,
-    type: "PWA App",
-    category: "apps",
-    tag: "Popular",
-    icon: Smartphone,
-    accentColor: "#f5c518",
-    desc: "Stay on top of tasks, deadlines, and study schedules — right from your phone. Works offline too.",
-    features: ["Offline support", "Task management", "Study scheduler"],
-  },
-  {
-    id: 2,
-    name: "UPCAT Prep App",
-    price: 149,
-    type: "PWA App",
-    category: "apps",
-    tag: "Best Seller",
-    icon: Zap,
-    accentColor: "#f5c518",
-    desc: "Full UPCAT reviewer with practice tests, timers, and progress tracking. Start your review today.",
-    features: ["Practice tests", "Progress tracker", "Offline access"],
-  },
-  {
-    id: 3,
-    name: "Science Reviewer",
-    price: 79,
-    type: "PDF Guide",
-    category: "guides",
-    tag: null,
-    icon: BookOpen,
-    accentColor: "#7a9e87",
-    desc: "Compact, exam-ready science notes covering all major high school topics. Print or read on-screen.",
-    features: ["All science subjects", "Printable PDF", "Exam-focused"],
-  },
-  {
-    id: 4,
-    name: "Note-taking Template Pack",
-    price: 49,
-    type: "Template",
-    category: "templates",
-    tag: "Bestseller",
-    icon: FileText,
-    accentColor: "#7a9e87",
-    desc: "Clean, printable note templates that make studying less painful. Cornell, outline, and more.",
-    features: ["5 template styles", "A4 & letter size", "Editable PDF"],
-  },
-  {
-    id: 5,
-    name: "Math Formula Sheet",
-    price: 39,
-    type: "PDF Guide",
-    category: "guides",
-    tag: null,
-    icon: Calculator,
-    accentColor: "#7a9e87",
-    desc: "All the formulas you need in one place — algebra, geometry, trig, and basic calculus.",
-    features: ["All math topics", "Quick reference", "Print-ready"],
-  },
-  {
-    id: 6,
-    name: "Pomodoro Study Timer",
-    price: 59,
-    type: "PWA App",
-    category: "apps",
-    tag: "New",
-    icon: Timer,
-    accentColor: "#f5c518",
-    desc: "Beat procrastination with timed study sessions. Customizable breaks, session logs, and streaks.",
-    features: ["Custom timers", "Session history", "Streak tracking"],
-  },
-];
+import { ChevronRight, ShoppingCart, Clock } from "lucide-react";
+import { PRODUCTS, type Product } from "@/data/products";
 
 const FILTERS = [
   { label: "All", value: "all" },
@@ -99,8 +14,31 @@ const FILTERS = [
 
 // ─── COMPONENTS ───────────────────────────────────────────────────────────────
 
-function ProductCard({ product }: { product: (typeof ALL_PRODUCTS)[0] }) {
+function ProductCard({ product }: { product: Product }) {
   const Icon = product.icon;
+
+  // Coming soon products get a simple, minimal card: just the name + a tag.
+  if (product.comingSoon) {
+    return (
+      <div className="card-dark p-5 flex flex-col gap-4 opacity-70">
+        <div
+          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{
+            backgroundColor: product.accentColor + "1a",
+            border: `1px solid ${product.accentColor}33`,
+          }}
+        >
+          <Icon size={22} style={{ color: product.accentColor }} />
+        </div>
+        <h3 className="font-display font-bold text-base">{product.name}</h3>
+        <span className="coming-soon-pill self-start">
+          <Clock size={11} />
+          Coming Soon
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="card-dark p-5 flex flex-col gap-4 hover:border-white/30 transition-all duration-200 group relative">
       {/* Tag */}
@@ -152,10 +90,13 @@ function ProductCard({ product }: { product: (typeof ALL_PRODUCTS)[0] }) {
         <span className="font-display font-bold text-2xl" style={{ color: product.accentColor }}>
           ₱{product.price}
         </span>
-        <button className="flex items-center gap-2 bg-[#f5c518] text-[#0f0f0f] font-semibold text-sm px-4 py-2 rounded-full hover:bg-yellow-300 transition-colors active:scale-95">
+        <Link
+          href={`/checkout/${product.slug}`}
+          className="btn-primary text-sm px-4 py-2"
+        >
           <ShoppingCart size={14} />
           Buy now
-        </button>
+        </Link>
       </div>
     </div>
   );
@@ -168,8 +109,8 @@ export default function ShopPage() {
 
   const filtered =
     active === "all"
-      ? ALL_PRODUCTS
-      : ALL_PRODUCTS.filter((p) => p.category === active);
+      ? PRODUCTS
+      : PRODUCTS.filter((p) => p.category === active);
 
   return (
     <>
@@ -247,7 +188,7 @@ export default function ShopPage() {
                 Pay with GCash or Maya 💸
               </h3>
               <p className="text-white/50 text-sm max-w-md">
-                No credit card needed. Pay the Filipino way — fast, familiar, and secure via PayMongo.
+                No credit card needed. Pay the Filipino way — fast, familiar, and secure.
               </p>
             </div>
             <div className="flex gap-3 flex-shrink-0">

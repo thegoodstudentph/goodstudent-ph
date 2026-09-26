@@ -1,146 +1,371 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowRight, CheckCircle, Sparkles, BookOpen, Smartphone, FileText, Loader2 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import {
+  ShoppingBag, Star, Download, Play, ChevronRight, Menu, X, CheckCircle,
+  Shield, ArrowRight, TrendingUp, Clock,
+} from "lucide-react";
+import { PRODUCTS } from "@/data/products";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const REVIEWS = [
+  { name: "Alexa R.", school: "UST, Manila", text: "Sobrang helpful ng UPCAT app! Parang may study buddy ka 24/7. Sulit na sulit ang ₱149.", stars: 5 },
+  { name: "Jomar T.", school: "UP Diliman", text: "Yung planner app changed how I study. Hindi na ako late sa deadlines. Highly recommend!", stars: 5 },
+  { name: "Bea C.", school: "Ateneo de Davao", text: "Ang ganda ng note templates. Printed ko lahat and my notebooks look so clean now!", stars: 5 },
+];
 
-function useCountdown(targetDate: string) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+const STEPS = [
+  { num: "01", title: "Browse the shop", desc: "Pick the app, guide, or template that fits your study needs.", icon: ShoppingBag },
+  { num: "02", title: "Pay once, own it forever", desc: "One-time payment. No subscriptions, no hidden fees.", icon: Shield },
+  { num: "03", title: "Download & start winning", desc: "Get instant access. Install the PWA or open the PDF right away.", icon: Download },
+];
+
+const STATS = [
+  { value: "2,400+", label: "Students helped" },
+  { value: "₱39", label: "Starting price" },
+  { value: String(PRODUCTS.length), label: "Products available" },
+  { value: "5★", label: "Average rating" },
+];
+
+// ─── FADE IN HOOK ─────────────────────────────────────────────────────────────
+function useFadeIn() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const fn = () => {
-      const diff = new Date(targetDate).getTime() - Date.now();
-      if (diff <= 0) { setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 }); return; }
-      setTimeLeft({
-        days: Math.floor(diff / 86400000),
-        hours: Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
-      });
-    };
-    fn();
-    const id = setInterval(fn, 1000);
-    return () => clearInterval(id);
-  }, [targetDate]);
-  return timeLeft;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.15 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return { ref, visible };
 }
 
-export default function Page() {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [mounted, setMounted] = useState(false);
-  const countdown = useCountdown("2026-08-14T08:00:00+08:00");
-  useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setLoading(true);
-    setError("");
-    try {
-      const { error: err } = await supabase
-        .from("waitlist")
-        .insert([{ email }]);
-      if (err) {
-        if (err.code === "23505") {
-          setError("You're already on the list! We'll notify you when we launch.");
-        } else {
-          setError("Something went wrong. Please try again.");
-        }
-      } else {
-        setSubmitted(true);
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function Nav() {
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
   return (
-    <div className="min-h-screen flex flex-col" style={{backgroundColor:"#0f0f0f",color:"white"}}>
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full" style={{background:"radial-gradient(circle, #f5c51815 0%, transparent 65%)"}}/>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "border-b border-white/10 bg-[#0f0f0f]/95 backdrop-blur-md shadow-lg" : "bg-transparent"}`}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <Link href="/" className="font-bold text-lg tracking-tight" style={{fontFamily:"system-ui,sans-serif"}}>
+          <span style={{color:"#f5c518"}}>Good</span><span className="text-white"> Student</span><span style={{color:"#7a9e87",fontSize:"0.8rem",fontWeight:400,marginLeft:"4px"}}>PH</span>
+        </Link>
+        <div className="hidden md:flex items-center gap-8">
+          <Link href="#about" className="text-white/60 hover:text-white text-sm transition-colors">About</Link>
+          <Link href="#how-it-works" className="text-white/60 hover:text-white text-sm transition-colors">How it works</Link>
+        </div>
+        <div className="hidden md:flex items-center gap-3">
+          <Link href="/login" className="border border-white/30 text-white text-sm font-semibold px-5 py-2 rounded-full hover:border-white/60 hover:bg-white/5 transition-all">Log in</Link>
+          <Link href="/shop" className="text-sm font-semibold px-5 py-2 rounded-full transition-all hover:opacity-90 active:scale-95 flex items-center gap-1.5" style={{backgroundColor:"#f5c518",color:"#0f0f0f"}}>
+            Shop <ChevronRight size={14}/>
+          </Link>
+        </div>
+        <button className="md:hidden text-white/70 hover:text-white" onClick={() => setOpen(!open)}>
+          {open ? <X size={22}/> : <Menu size={22}/>}
+        </button>
       </div>
-      <nav className="relative z-10 px-6 py-5 flex items-center justify-between max-w-6xl mx-auto w-full">
-        <div className="font-bold text-lg" style={{fontFamily:"system-ui,sans-serif"}}>
-          <span style={{color:"#f5c518"}}>Good</span><span> Student</span>
-          <span style={{color:"#7a9e87",fontSize:"0.8rem",fontWeight:400,marginLeft:"4px"}}>PH</span>
-        </div>
-        <div className="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full" style={{backgroundColor:"#f5c51811",border:"1px solid #f5c51833",color:"#f5c518"}}>
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{backgroundColor:"#f5c518"}}/>
-          Coming Soon
-        </div>
-      </nav>
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 relative z-10">
-        <div className={`max-w-2xl w-full text-center transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-8" style={{backgroundColor:"#f5c51811",border:"1px solid #f5c51833",color:"#f5c518"}}>
-            <Sparkles size={14}/>We're building something for Filipino students
+      {open && (
+        <div className="md:hidden border-t border-white/10 bg-[#0f0f0f] px-4 pb-6 pt-4 flex flex-col gap-4">
+          <Link href="#about" className="text-white/70 py-2" onClick={() => setOpen(false)}>About</Link>
+          <Link href="#how-it-works" className="text-white/70 py-2" onClick={() => setOpen(false)}>How it works</Link>
+          <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
+            <Link href="/login" className="border border-white/30 text-white font-semibold px-5 py-3 rounded-full text-center hover:bg-white/5 transition-all">Log in</Link>
+            <Link href="/shop" className="font-semibold px-5 py-3 rounded-full text-center" style={{backgroundColor:"#f5c518",color:"#0f0f0f"}}>Shop now</Link>
           </div>
-          <h1 className="text-5xl sm:text-7xl font-extrabold leading-[1.05] mb-6" style={{fontFamily:"system-ui,sans-serif"}}>
-            Study smarter.<br/><span style={{color:"#f5c518"}}>Score higher.</span>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+// ─── HERO ─────────────────────────────────────────────────────────────────────
+function Hero() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setTimeout(() => setMounted(true), 100); }, []);
+  return (
+    <section className="pt-28 pb-20 px-4 sm:px-6 max-w-6xl mx-auto relative">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-10 pointer-events-none" style={{background:"radial-gradient(circle, #f5c518 0%, transparent 70%)"}}/>
+      <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border mb-6 text-xs font-semibold" style={{borderColor:"#f5c518"+"44",color:"#f5c518",backgroundColor:"#f5c518"+"11"}}>
+            <TrendingUp size={12}/> 2,400+ Filipino students already studying smarter
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-extrabold leading-[1.05] mb-4" style={{fontFamily:"system-ui,sans-serif"}}>
+            Study smarter.<br/>
+            <span style={{color:"#f5c518"}}>Score higher.</span><br/>
+            <span className="text-white/70 text-4xl sm:text-5xl font-bold">Finally make it easy.</span>
           </h1>
-          <p className="text-lg mb-8" style={{color:"rgba(255,255,255,0.55)",lineHeight:1.7}}>
-            The Good Student PH is launching soon — digital apps, reviewers, and templates made for Filipino students. Pay via GCash or Maya. No subscriptions.
+          <p className="text-white/55 text-lg leading-relaxed mb-8 max-w-md">
+            Digital apps, reviewers, and templates built for Filipino students — from ₱39. No card needed, no subscriptions. Just tools that actually work.
           </p>
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
-            {[{icon:Smartphone,label:"PWA Study Apps"},{icon:BookOpen,label:"PDF Reviewers"},{icon:FileText,label:"Note Templates"}].map(({icon:Icon,label}) => (
-              <div key={label} className="flex items-center gap-2 px-4 py-2 rounded-full text-sm" style={{backgroundColor:"#1a1a1a",border:"1px solid #333",color:"rgba(255,255,255,0.6)"}}>
-                <Icon size={14} style={{color:"#7a9e87"}}/>{label}
+          <div className="flex flex-wrap gap-3">
+            <Link href="/shop" className="font-bold text-base px-7 py-3.5 rounded-full flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg" style={{backgroundColor:"#f5c518",color:"#0f0f0f",boxShadow:"0 0 30px #f5c51844"}}>
+              Browse products <ArrowRight size={16}/>
+            </Link>
+            <Link href="#how-it-works" className="border border-white/30 text-white font-semibold text-base px-7 py-3.5 rounded-full hover:border-white/60 hover:bg-white/5 transition-all">
+              How it works
+            </Link>
+          </div>
+          <div className="flex items-center gap-4 mt-6">
+            {["GCash accepted","Maya accepted","One-time payment"].map(t => (
+              <div key={t} className="flex items-center gap-1.5 text-xs text-white/40">
+                <CheckCircle size={12} style={{color:"#7a9e87"}}/>{t}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-4 gap-3 max-w-sm mx-auto mb-10">
-            {[{value:countdown.days,label:"Days"},{value:countdown.hours,label:"Hours"},{value:countdown.minutes,label:"Mins"},{value:countdown.seconds,label:"Secs"}].map(({value,label}) => (
-              <div key={label} className="rounded-2xl py-4 text-center" style={{backgroundColor:"#1a1a1a",border:"1px solid #333"}}>
-                <p className="text-3xl font-bold" style={{color:"#f5c518",fontFamily:"system-ui,sans-serif"}}>{String(value).padStart(2,"0")}</p>
-                <p className="text-xs mt-1" style={{color:"rgba(255,255,255,0.35)"}}>{label}</p>
-              </div>
-            ))}
-          </div>
-          {!submitted ? (
-            <div className="max-w-md mx-auto mb-6">
-              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 mb-3">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e=>{setEmail(e.target.value);setError("");}}
-                  placeholder="your@email.com"
-                  required
-                  disabled={loading}
-                  className="flex-1 px-5 py-3.5 rounded-full text-sm text-white outline-none disabled:opacity-60"
-                  style={{backgroundColor:"#1a1a1a",border:"1px solid #333"}}
-                />
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-3.5 rounded-full text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
-                  style={{backgroundColor:"#f5c518",color:"#0f0f0f"}}
-                >
-                  {loading ? <><Loader2 size={14} className="animate-spin"/>Saving…</> : <>Notify me <ArrowRight size={14}/></>}
-                </button>
-              </form>
-              {error && (
-                <p className="text-sm" style={{color:"#f87171"}}>{error}</p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-2 text-sm font-semibold mb-6 py-3.5" style={{color:"#7a9e87"}}>
-              <CheckCircle size={18}/>You're on the list! We'll email you when we launch. 🎉
-            </div>
-          )}
-          <p className="text-xs" style={{color:"rgba(255,255,255,0.25)"}}>No spam ever. Just one email when we go live.</p>
         </div>
+        <div className={`transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+          <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#1a1a1a] aspect-video flex items-center justify-center group cursor-pointer hover:border-white/20 transition-colors">
+            <div className="absolute inset-0" style={{background:"linear-gradient(135deg, #f5c51811 0%, #7a9e8711 100%)"}}/>
+            <div className="relative z-10 flex flex-col items-center gap-3 text-white/50 group-hover:text-white transition-all">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform" style={{backgroundColor:"#f5c51822",border:"1px solid #f5c51844"}}>
+                <Play size={24} style={{color:"#f5c518",marginLeft:"3px"}}/>
+              </div>
+              <span className="text-sm">Watch demo</span>
+            </div>
+            <div className="absolute bottom-4 left-4 right-4">
+              <div className="bg-white/5 rounded-lg px-4 py-2 text-xs text-white/40">See how a PWA app works on your phone</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── STATS ────────────────────────────────────────────────────────────────────
+function StatsBar() {
+  const { ref, visible } = useFadeIn();
+  return (
+    <section ref={ref} className={`border-y border-white/10 bg-[#1a1a1a] transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+        {STATS.map((s) => (
+          <div key={s.label} className="text-center">
+            <p className="text-2xl sm:text-3xl font-bold" style={{color:"#f5c518",fontFamily:"system-ui,sans-serif"}}>{s.value}</p>
+            <p className="text-white/50 text-sm mt-1">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── PRODUCTS ─────────────────────────────────────────────────────────────────
+function FeaturedProducts() {
+  const { ref, visible } = useFadeIn();
+  const featured = PRODUCTS.slice(0, 4);
+  return (
+    <section id="products" ref={ref} className={`py-20 px-4 sm:px-6 max-w-6xl mx-auto transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+      <div className="flex items-end justify-between mb-10">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{color:"#7a9e87"}}>What&apos;s available</p>
+          <h2 className="text-4xl font-bold" style={{fontFamily:"system-ui,sans-serif"}}>Featured products</h2>
+        </div>
+        <Link href="/shop" className="text-sm font-semibold hover:underline hidden sm:block" style={{color:"#f5c518"}}>View all →</Link>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {featured.map((p, i) => {
+          const Icon = p.icon;
+
+          // Coming soon products: just the name + a simple tag, nothing else.
+          if (p.comingSoon) {
+            return (
+              <div key={p.id} className="bg-[#1a1a1a] border border-[#333] rounded-2xl p-5 flex flex-col gap-4 opacity-70"
+                style={{transitionDelay:`${i*60}ms`}}>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{backgroundColor:p.accentColor+"22",border:`1px solid ${p.accentColor}44`}}>
+                  <Icon size={22} style={{color:p.accentColor}}/>
+                </div>
+                <h3 className="font-bold text-base" style={{fontFamily:"system-ui,sans-serif"}}>{p.name}</h3>
+                <span className="coming-soon-pill self-start">
+                  <Clock size={11}/>
+                  Coming Soon
+                </span>
+              </div>
+            );
+          }
+
+          return (
+            <div key={p.id} className="bg-[#1a1a1a] border border-[#333] rounded-2xl p-5 flex flex-col gap-4 group cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:border-white/30 hover:shadow-2xl"
+              style={{transitionDelay:`${i*60}ms`}}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110" style={{backgroundColor:p.accentColor+"22",border:`1px solid ${p.accentColor}44`}}>
+                <Icon size={22} style={{color:p.accentColor}}/>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs px-2.5 py-1 rounded-full border border-white/20 text-white/60">{p.type}</span>
+                {p.tag && <span className="text-xs px-2.5 py-1 rounded-full font-semibold" style={{backgroundColor:"#f5c51811",color:"#f5c518",border:"1px solid #f5c51833"}}>{p.tag}</span>}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-base mb-1.5" style={{fontFamily:"system-ui,sans-serif"}}>{p.name}</h3>
+                <p className="text-white/50 text-sm leading-relaxed">{p.desc}</p>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                <span className="font-bold text-xl" style={{color:p.accentColor,fontFamily:"system-ui,sans-serif"}}>₱{p.price}</span>
+                <Link href={`/checkout/${p.slug}`} className="text-xs font-semibold text-white/50 group-hover:text-white transition-colors">Get it →</Link>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-6 sm:hidden text-center">
+        <Link href="/shop" className="text-sm font-semibold" style={{color:"#f5c518"}}>View all products →</Link>
+      </div>
+    </section>
+  );
+}
+
+// ─── REVIEWS ──────────────────────────────────────────────────────────────────
+function Reviews() {
+  const { ref, visible } = useFadeIn();
+  return (
+    <section ref={ref} className={`py-16 px-4 sm:px-6 bg-[#1a1a1a] border-y border-white/10 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-10">
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{color:"#7a9e87"}}>What students say</p>
+          <h2 className="text-4xl font-bold" style={{fontFamily:"system-ui,sans-serif"}}>Real reviews 💬</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          {REVIEWS.map((r, i) => (
+            <div key={i} className="bg-[#0f0f0f] border border-white/10 rounded-2xl p-6 flex flex-col gap-4 hover:-translate-y-1 transition-transform duration-300">
+              <div className="flex gap-1">{[...Array(r.stars)].map((_,j) => <Star key={j} size={14} style={{fill:"#f5c518",color:"#f5c518"}}/>)}</div>
+              <p className="text-white/70 text-sm leading-relaxed flex-1">&ldquo;{r.text}&rdquo;</p>
+              <div>
+                <p className="font-semibold text-sm" style={{fontFamily:"system-ui,sans-serif"}}>{r.name}</p>
+                <p className="text-white/40 text-xs">{r.school}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── HOW IT WORKS ─────────────────────────────────────────────────────────────
+function HowItWorks() {
+  const { ref, visible } = useFadeIn();
+  return (
+    <section id="how-it-works" ref={ref} className={`py-20 px-4 sm:px-6 max-w-6xl mx-auto transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+      <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-[#1a1a1a] aspect-video flex items-center justify-center group cursor-pointer hover:border-white/20 transition-colors">
+          <div className="absolute inset-0" style={{background:"linear-gradient(225deg, #7a9e8711 0%, #f5c51808 100%)"}}/>
+          <div className="relative z-10 flex flex-col items-center gap-3 text-white/50 group-hover:text-white transition-all">
+            <div className="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Play size={24} style={{color:"white",marginLeft:"3px"}}/>
+            </div>
+            <span className="text-sm">How to pay & download</span>
+          </div>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{color:"#7a9e87"}}>Simple process</p>
+          <h2 className="text-4xl font-bold mb-8" style={{fontFamily:"system-ui,sans-serif"}}>
+            From checkout to studying in <span style={{color:"#7a9e87"}}>3 steps</span>
+          </h2>
+          <div className="flex flex-col gap-6">
+            {STEPS.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.num} className="flex gap-5 items-start group">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#1a1a1a] border border-white/10 flex items-center justify-center group-hover:border-white/30 group-hover:scale-105 transition-all">
+                    <Icon size={20} style={{color:"#f5c518"}}/>
+                  </div>
+                  <div>
+                    <p className="text-white/30 text-xs font-mono mb-1">{step.num}</p>
+                    <h3 className="font-bold mb-1" style={{fontFamily:"system-ui,sans-serif"}}>{step.title}</h3>
+                    <p className="text-white/50 text-sm leading-relaxed">{step.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── ABOUT ────────────────────────────────────────────────────────────────────
+function About() {
+  const { ref, visible } = useFadeIn();
+  return (
+    <section id="about" ref={ref} className={`py-20 px-4 sm:px-6 bg-[#1a1a1a] border-t border-white/10 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+      <div className="max-w-3xl mx-auto text-center">
+        <p className="text-xs font-semibold uppercase tracking-widest mb-4" style={{color:"#7a9e87"}}>Our story</p>
+        <h2 className="text-4xl font-bold mb-6" style={{fontFamily:"system-ui,sans-serif"}}>
+          Built by a student, <span style={{color:"#f5c518"}}>for students</span>
+        </h2>
+        <p className="text-white/60 text-lg leading-relaxed mb-4">
+          The Good Student PH started as a personal mission — to give Filipino students study tools that actually fit their lives. No dollar subscriptions. No complicated setups. Just useful digital products you can pay for with GCash.
+        </p>
+        <p className="text-white/45 text-base leading-relaxed">Every product is designed with one goal: help you study smarter, score higher, and stress less. Built with AI, designed for you.</p>
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
+          {["GCash & Maya accepted","One-time payment, no subs","Works offline (PWA apps)","Instant download"].map(t => (
+            <div key={t} className="flex items-center gap-2 text-sm text-white/60">
+              <CheckCircle size={16} style={{color:"#7a9e87"}}/>{t}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── SOCIALS ──────────────────────────────────────────────────────────────────
+function Socials() {
+  const { ref, visible } = useFadeIn();
+  return (
+    <section ref={ref} className={`py-16 px-4 sm:px-6 max-w-6xl mx-auto text-center transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
+      <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{color:"#7a9e87"}}>Stay connected</p>
+      <h2 className="text-3xl font-bold mb-6" style={{fontFamily:"system-ui,sans-serif"}}>Follow our journey</h2>
+      <p className="text-white/50 mb-8 max-w-md mx-auto">Tips, product updates, and study hacks — follow us on social media.</p>
+      <div className="flex justify-center gap-4 flex-wrap">
+        {[{label:"TikTok",color:"#f5c518"},{label:"Instagram",color:"#7a9e87"},{label:"Facebook",color:"#7a9e87"}].map(s => (
+          <a key={s.label} href="#" className="px-6 py-3 rounded-full border border-white/20 text-sm font-semibold hover:border-white/50 hover:-translate-y-1 transition-all duration-200" style={{color:s.color}}>
+            @goodstudentph on {s.label}
+          </a>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ─── FOOTER ───────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer className="border-t border-white/10 py-10 px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-white/40 text-sm">
+        <div className="font-bold" style={{fontFamily:"system-ui,sans-serif"}}>
+          <span style={{color:"#f5c518"}}>Good</span><span className="text-white"> Student</span><span style={{color:"#7a9e87"}}> PH</span>
+        </div>
+        <p>© {new Date().getFullYear()} The Good Student PH. All rights reserved.</p>
+        <div className="flex gap-4">
+          <Link href="/shop" className="hover:text-white transition-colors">Shop</Link>
+          <Link href="#about" className="hover:text-white transition-colors">About</Link>
+          <Link href="/login" className="hover:text-white transition-colors">Log in</Link>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <>
+      <Nav/>
+      <main>
+        <Hero/>
+        <StatsBar/>
+        <FeaturedProducts/>
+        <Reviews/>
+        <HowItWorks/>
+        <About/>
+        <Socials/>
       </main>
-      <footer className="relative z-10 text-center py-6 text-xs" style={{color:"rgba(255,255,255,0.2)"}}>
-        © {new Date().getFullYear()} The Good Student PH · Built with 💛 for Filipino students
-      </footer>
-    </div>
+      <Footer/>
+    </>
   );
 }
