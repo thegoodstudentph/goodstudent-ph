@@ -22,7 +22,7 @@ const STEPS = [
 
 const STATS = [
   { value: "2,400+", label: "Students helped" },
-  { value: "₱39", label: "Starting price" },
+  { value: "₱99", label: "Starting price" },
   { value: String(PRODUCTS.length), label: "Products available" },
   { value: "5★", label: "Average rating" },
 ];
